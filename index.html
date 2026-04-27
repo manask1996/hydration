@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#080c12"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="droplet"/>
+<meta name="description" content="Stay hydrated. Stay legendary. Track your daily water intake."/>
+<title>droplet 💧</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" href="icons/icon-192.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#080c12;--surface:#0d1420;--surface2:#111927;--surface3:#16202e;
+  --cyan:#00e5ff;--cyan2:#00b8d4;--pink:#ff4fcb;--green:#39ff96;--gold:#ffd700;
+  --text:#e8f4f8;--muted:#4a6278;--border:rgba(0,229,255,0.12);--border2:rgba(0,229,255,0.22);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'DM Sans',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+
+/* Install banner */
+#installBanner{display:none;background:var(--surface2);border-bottom:1px solid var(--border2);padding:10px 16px;align-items:center;gap:10px;flex-shrink:0;}
+#installBanner.show{display:flex;}
+.install-text{flex:1;font-size:13px;color:var(--text);}
+.install-text span{color:var(--cyan);font-weight:600;}
+.install-btn{background:var(--cyan);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;white-space:nowrap;}
+.install-dismiss{color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:0 4px;}
+
+/* Main layout */
+.app-shell{flex:1;display:flex;flex-direction:column;overflow:hidden;padding-top:var(--safe-top);}
+.header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0;flex-shrink:0;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--cyan);}
+.logo span{color:var(--text);font-weight:400;font-size:12px;letter-spacing:2px;margin-left:4px;opacity:0.5;vertical-align:middle;}
+.streak{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:12px;}
+.streak-num{font-family:'Syne',sans-serif;font-weight:700;color:var(--cyan);}
+
+.tabs{display:flex;padding:14px 20px 0;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tab{flex:1;text-align:center;padding:9px 0;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+
+.tab-content{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.tab-content.active{display:block;}
+.tab-content::-webkit-scrollbar{display:none;}
+
+/* Today tab */
+.hero{padding:20px 20px 12px;display:flex;flex-direction:column;align-items:center;}
+.bottle-container{position:relative;width:140px;height:190px;display:flex;align-items:center;justify-content:center;}
+.bottle-glow{position:absolute;bottom:8px;width:90px;height:24px;background:var(--cyan);border-radius:50%;filter:blur(16px);opacity:0;transition:opacity .8s;pointer-events:none;}
+.bottle-svg{width:120px;filter:drop-shadow(0 0 10px rgba(0,229,255,0.15));z-index:2;}
+.consumed-row{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:6px;}
+.consumed-amount{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;line-height:1;color:var(--cyan);letter-spacing:-2px;transition:all .4s;}
+.consumed-unit{font-size:12px;color:var(--muted);}
+.goal-pill{margin-top:6px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.25);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:500;color:var(--cyan);transition:all .4s;}
+.goal-pill.half{background:rgba(255,79,203,0.1);border-color:rgba(255,79,203,0.3);color:var(--pink);}
+.goal-pill.done{background:rgba(57,255,150,0.1);border-color:rgba(57,255,150,0.3);color:var(--green);}
+
+.section{padding:0 16px;margin-top:12px;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:14px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.3),transparent);}
+.goal-bar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.goal-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.goal-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.bar-track{height:5px;background:rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--cyan);border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1);width:0%;}
+.bar-fill.pink{background:var(--pink);}
+.bar-fill.green{background:var(--green);}
+
+.reminder-card{display:flex;align-items:center;justify-content:space-between;}
+.reminder-left{display:flex;flex-direction:column;gap:2px;}
+.reminder-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.reminder-time{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.5px;}
+.reminder-next{font-size:11px;color:var(--muted);}
+.set-btn{background:var(--cyan);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;}
+
+.controls{display:flex;gap:8px;padding:0 16px;margin-top:10px;}
+.ctrl-btn{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s;user-select:none;}
+.ctrl-btn.pause-active{color:var(--cyan);border-color:rgba(0,229,255,0.3);}
+.ctrl-btn.danger:active{color:var(--pink);}
+
+.quick-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.quick-btn{background:var(--surface3);border:1px solid var(--border);border-radius:12px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .15s;user-select:none;}
+.quick-btn:active{transform:scale(0.93);border-color:var(--border2);}
+.quick-icon{font-size:18px;}
+.quick-ml{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--cyan);}
+.quick-unit{font-size:10px;color:var(--muted);}
+.custom-row{display:flex;gap:8px;margin-top:8px;}
+.custom-input{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;}
+.custom-input::placeholder{color:var(--muted);}
+.custom-input:focus{border-color:var(--cyan2);}
+.log-btn{background:var(--cyan);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;border:none;border-radius:10px;padding:11px 16px;cursor:pointer;white-space:nowrap;}
+
+.log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.log-title{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.clear-btn{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;}
+.log-list{display:flex;flex-direction:column;gap:5px;}
+.log-entry{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--surface3);border-radius:10px;border:1px solid var(--border);animation:slideIn .25s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.log-entry-left{display:flex;align-items:center;gap:8px;}
+.log-dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);flex-shrink:0;}
+.log-time-text{font-size:12px;color:var(--muted);}
+.log-entry-right{display:flex;align-items:center;gap:7px;}
+.log-reaction{font-size:17px;line-height:1;}
+.log-amount-text{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);}
+.empty-log{font-size:13px;color:var(--muted);text-align:center;padding:14px 0;font-style:italic;}
+.pb{height:32px;}
+
+/* Bottom safe area spacer */
+.safe-bottom{height:var(--safe-bottom);}
+
+/* Modals */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:flex-end;justify-content:center;}
+.modal.active{display:flex;}
+.sheet{background:var(--surface2);border:1px solid var(--border2);border-radius:22px 22px 0 0;padding:22px 20px 28px;width:100%;max-width:500px;animation:slideUp .3s ease;}
+.sheet{padding-bottom:calc(28px + var(--safe-bottom));}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:3px;}
+.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.sheet-row{display:flex;gap:10px;margin-bottom:10px;align-items:center;}
+.sheet-row label{font-size:12px;color:var(--muted);white-space:nowrap;}
+.sheet-input{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--cyan);outline:none;}
+.sheet-actions{display:flex;gap:10px;margin-top:8px;}
+.sheet-cancel{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:12px;padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;}
+.sheet-save{flex:2;background:var(--cyan);border:none;border-radius:12px;padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#000;cursor:pointer;}
+.saved-alarms{margin-top:12px;display:flex;flex-direction:column;gap:5px;max-height:130px;overflow-y:auto;}
+.saved-alarm-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface3);border-radius:10px;border:1px solid var(--border);}
+.sa-time{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--cyan);}
+.sa-amt{font-size:12px;color:var(--muted);}
+.sa-del{color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;}
+
+.drink-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.drink-opt{background:var(--surface3);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;}
+.drink-opt:active{transform:scale(0.95);border-color:var(--cyan2);}
+.drink-opt-ml{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--cyan);}
+.drink-opt-unit{font-size:11px;color:var(--muted);}
+.drink-custom{display:flex;gap:8px;}
+.drink-custom input{flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--cyan);outline:none;}
+.drink-log{background:var(--cyan);color:#000;border:none;border-radius:10px;padding:12px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+
+/* Celebration overlay */
+.cele-overlay{display:none;position:fixed;inset:0;z-index:500;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.88);padding:24px;}
+.cele-overlay.active{display:flex;animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.cele-gif{width:220px;height:220px;border-radius:22px;object-fit:cover;border:2px solid var(--cyan);animation:popIn .5s cubic-bezier(.2,1.4,.4,1);}
+.cele-gif.legend{border-color:var(--gold);}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.cele-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-top:16px;text-align:center;animation:popIn .5s .15s both;}
+.cele-title.legend{background:linear-gradient(90deg,var(--gold),var(--pink),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.cele-sub{font-size:13px;color:var(--muted);margin-top:5px;text-align:center;animation:popIn .5s .2s both;}
+.streak-dots{display:flex;gap:6px;margin-top:10px;animation:popIn .5s .25s both;}
+.streak-dot{width:11px;height:11px;border-radius:50%;background:var(--muted);}
+.streak-dot.filled{background:var(--gold);}
+.cele-close{margin-top:18px;background:var(--cyan);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;border:none;border-radius:12px;padding:12px 32px;cursor:pointer;animation:popIn .5s .3s both;}
+.cele-close.legend{background:var(--gold);}
+
+/* Emoji burst */
+.emoji-burst{position:fixed;pointer-events:none;z-index:999;font-size:36px;line-height:1;animation:burstAnim .85s cubic-bezier(.2,1.4,.4,1) forwards;}
+@keyframes burstAnim{0%{opacity:1;transform:translate(-50%,-50%) scale(0.3);}40%{opacity:1;transform:translate(-50%,-110%) scale(1.3);}70%{opacity:1;transform:translate(-50%,-150%) scale(1.1);}100%{opacity:0;transform:translate(-50%,-210%) scale(0.9);}}
+
+/* Toast */
+.toast{position:fixed;top:calc(16px + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:9px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);z-index:998;display:flex;align-items:center;gap:8px;white-space:nowrap;transition:transform .3s cubic-bezier(.2,1.2,.4,1);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- Install prompt banner -->
+<div id="installBanner">
+  <div class="install-text">Add <span>droplet</span> to your home screen!</div>
+  <button class="install-btn" id="installBtn">Install</button>
+  <span class="install-dismiss" onclick="dismissInstall()">×</span>
+</div>
+
+<div class="app-shell">
+  <div class="header">
+    <div class="logo">droplet <span>HYDRATION</span></div>
+    <div class="streak">
+      <span style="font-size:14px">🔥</span>
+      <span class="streak-num" id="streakNum">0</span>
+      <span style="font-size:11px;color:var(--muted)">day streak</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('today')">Today</div>
+    <div class="tab" onclick="switchTab('alarms')">Alarms</div>
+    <div class="tab" onclick="switchTab('stats')">Stats</div>
+  </div>
+
+  <!-- TODAY TAB -->
+  <div class="tab-content active" id="tab-today">
+    <div class="hero">
+      <div class="bottle-container">
+        <div class="bottle-glow" id="bottleGlow"></div>
+        <svg class="bottle-svg" viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <clipPath id="bc"><path d="M46 38 Q38 50 30 68 L22 100 L22 182 Q22 196 36 196 L104 196 Q118 196 118 182 L118 100 L110 68 Q102 50 94 38 Z"/></clipPath>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(0,229,255,0.07)"/>
+              <stop offset="50%" stop-color="rgba(0,229,255,0.16)"/>
+              <stop offset="100%" stop-color="rgba(0,229,255,0.05)"/>
+            </linearGradient>
+          </defs>
+          <rect id="wfill" x="22" y="182" width="96" height="0" fill="#00e5ff" clip-path="url(#bc)" style="transition:y .9s cubic-bezier(.4,0,.2,1),height .9s cubic-bezier(.4,0,.2,1);opacity:0.85;"/>
+          <rect x="22" y="22" width="96" height="174" rx="2" fill="url(#bg)" clip-path="url(#bc)"/>
+          <path d="M46 38 Q38 50 30 68 L22 100 L22 182 Q22 196 36 196 L104 196 Q118 196 118 182 L118 100 L110 68 Q102 50 94 38 Z" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.5"/>
+          <path d="M46 38 Q38 50 30 68 L22 100 L22 182 Q22 196 36 196 L104 196 Q118 196 118 182 L118 100 L110 68 Q102 50 94 38 Z" fill="none" stroke="rgba(0,229,255,0.12)" stroke-width="8"/>
+          <rect x="50" y="14" width="40" height="26" rx="5" fill="rgba(0,229,255,0.07)" stroke="#00e5ff" stroke-width="1.2" opacity="0.6"/>
+          <rect x="54" y="6" width="32" height="10" rx="4" fill="rgba(0,229,255,0.18)" stroke="#00e5ff" stroke-width="1" opacity="0.7"/>
+          <line x1="22" y1="115" x2="28" y2="115" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+          <line x1="22" y1="140" x2="28" y2="140" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+          <line x1="22" y1="165" x2="28" y2="165" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+          <line x1="112" y1="115" x2="118" y2="115" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+          <line x1="112" y1="140" x2="118" y2="140" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+          <line x1="112" y1="165" x2="118" y2="165" stroke="#00e5ff" stroke-width="1" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="consumed-row">
+        <div class="consumed-amount" id="consumedAmt">0</div>
+        <div class="consumed-unit">ml consumed today</div>
+        <div class="goal-pill" id="goalPill">0% of goal</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <div class="goal-bar-row">
+          <span class="goal-label">daily goal</span>
+          <span class="goal-text" id="goalText">0 / 2000 ml</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:10px;">
+      <div class="card reminder-card">
+        <div class="reminder-left">
+          <span class="reminder-label">next reminder in</span>
+          <span class="reminder-time" id="reminderTime">--:--:--</span>
+          <span class="reminder-next" id="reminderNext">set an alarm</span>
+        </div>
+        <button class="set-btn" onclick="switchTab('alarms')">set alarm</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="ctrl-btn" id="pauseBtn" onclick="togglePause()">⏸ pause</div>
+      <div class="ctrl-btn danger" onclick="resetDay()">↺ reset day</div>
+    </div>
+
+    <div class="section" style="margin-top:12px;">
+      <div class="quick-label">quick add</div>
+      <div class="quick-grid">
+        <div class="quick-btn" onclick="logWater(150,event)"><span class="quick-icon">💧</span><span class="quick-ml">150</span><span class="quick-unit">ml</span></div>
+        <div class="quick-btn" onclick="logWater(250,event)"><span class="quick-icon">🥤</span><span class="quick-ml">250</span><span class="quick-unit">ml</span></div>
+        <div class="quick-btn" onclick="logWater(330,event)"><span class="quick-icon">🧃</span><span class="quick-ml">330</span><span class="quick-unit">ml</span></div>
+        <div class="quick-btn" onclick="logWater(500,event)"><span class="quick-icon">🍶</span><span class="quick-ml">500</span><span class="quick-unit">ml</span></div>
+      </div>
+      <div class="custom-row">
+        <input class="custom-input" id="customInput" type="number" inputmode="numeric" placeholder="custom amount..." min="10" max="3000"/>
+        <button class="log-btn" onclick="logCustom(event)">+ log</button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:12px;">
+      <div class="log-header">
+        <span class="log-title">today's log</span>
+        <button class="clear-btn" onclick="clearLog()">clear all</button>
+      </div>
+      <div class="log-list" id="logList"><div class="empty-log">no entries yet. start drinking!</div></div>
+    </div>
+    <div class="pb"></div>
+    <div class="safe-bottom"></div>
+  </div>
+
+  <!-- ALARMS TAB -->
+  <div class="tab-content" id="tab-alarms">
+    <div style="padding:20px 16px;">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;">reminders</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">we'll ring when it's time to drink 💦</div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">add new alarm</div>
+        <div class="sheet-row"><label>time</label><input class="sheet-input" type="time" id="alarmTime" value="09:00"/></div>
+        <div class="sheet-row"><label>target ml</label><input class="sheet-input" type="number" inputmode="numeric" id="alarmAmt" value="250" min="50" max="1000" style="max-width:100px"/></div>
+        <div class="sheet-row"><label>daily goal</label><input class="sheet-input" type="number" inputmode="numeric" id="goalSet" value="2000" min="500" max="5000" step="100" style="max-width:100px"/></div>
+        <button class="sheet-save" style="width:100%;margin-top:4px;" onclick="addAlarm()">+ add alarm</button>
+      </div>
+
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">saved alarms</div>
+      <div id="alarmListFull"><div class="empty-log">no alarms yet</div></div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div class="tab-content" id="tab-stats">
+    <div style="padding:20px 16px;">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;">your stats</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">hydration at a glance</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;" id="statsGrid"></div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">streak tracker</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="streakGrid"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;">🟢 goal hit &nbsp; ⬜ missed</div>
+      </div>
+    </div>
+    <div class="safe-bottom"></div>
+  </div>
+</div>
+
+<!-- Drink alarm modal -->
+<div class="modal" id="drinkModal">
+  <div class="sheet">
+    <div class="sheet-title">drink up! 💧</div>
+    <div class="sheet-sub" id="drinkSub">log your intake to dismiss</div>
+    <div class="drink-quick">
+      <div class="drink-opt" onclick="logWater(100,event)"><div class="drink-opt-ml">100</div><div class="drink-opt-unit">ml</div></div>
+      <div class="drink-opt" onclick="logWater(200,event)"><div class="drink-opt-ml">200</div><div class="drink-opt-unit">ml</div></div>
+      <div class="drink-opt" onclick="logWater(250,event)"><div class="drink-opt-ml">250</div><div class="drink-opt-unit">ml</div></div>
+      <div class="drink-opt" onclick="logWater(500,event)"><div class="drink-opt-ml">500</div><div class="drink-opt-unit">ml</div></div>
+    </div>
+    <div class="drink-custom">
+      <input type="number" inputmode="numeric" id="drinkCustom" placeholder="custom ml..." min="10" max="2000"/>
+      <button class="drink-log" onclick="logDrinkCustom(event)">log it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Celebration overlay -->
+<div class="cele-overlay" id="celeOverlay">
+  <img class="cele-gif" id="celeGif" src="" alt="celebration"/>
+  <div class="cele-title" id="celeTitle"></div>
+  <div class="cele-sub" id="celeSub"></div>
+  <div class="streak-dots" id="streakDots"></div>
+  <button class="cele-close" id="celeClose" onclick="closeCele()">let's gooo!</button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastEmoji" style="font-size:18px"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let alarms=[],logs=[],totalToday=0,goal=2000,streak=0,paused=false,alarmActive=false,goalCelebrated=false;
+let countdown=0,timerInterval=null;
+const BTOP=100,BBOT=182,BRANGE=BBOT-BTOP;
+
+const NORMAL_GIFS=[
+  'https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif',
+  'https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif',
+  'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif'
+];
+const LEGEND_GIFS=[
+  'https://media.giphy.com/media/g9582DNuQppxC/giphy.gif',
+  'https://media.giphy.com/media/XreQmk7ETCak0/giphy.gif',
+  'https://media.giphy.com/media/26tOZ42Mg6pbTUPHW/giphy.gif'
+];
+const REACTIONS=[
+  {max:200,emojis:['💧','😌','👌'],msg:'small sips count!'},
+  {max:350,emojis:['🥤','😎','✨'],msg:'nice one!'},
+  {max:500,emojis:['🍶','💪','🔥'],msg:'big gulp energy!'},
+  {max:Infinity,emojis:['🌊','🤯','👑'],msg:'absolute unit!'}
+];
+const MILESTONES=[
+  {pct:.25,emoji:'⚡',msg:"25% there, let's go!"},
+  {pct:.5,emoji:'🔥',msg:"halfway! you're on fire!"},
+  {pct:.75,emoji:'💫',msg:"75%! almost there!"}
+];
+let shownMilestones=new Set();
+
+// ── Storage ────────────────────────────────────────────────
+function save(){
+  localStorage.setItem('droplet_pwa',JSON.stringify({
+    date:new Date().toDateString(),alarms,logs,totalToday,goal,streak,
+    milestones:[...shownMilestones],goalCelebrated
+  }));
+}
+
+function archiveDay(dateStr,ml,g){
+  let hist={};
+  try{hist=JSON.parse(localStorage.getItem('droplet_hist')||'{}');}catch(e){}
+  hist[dateStr]={ml,goal:g,hit:ml>=g};
+  const keys=Object.keys(hist).sort((a,b)=>new Date(b)-new Date(a)).slice(0,30);
+  const trimmed={};keys.forEach(k=>trimmed[k]=hist[k]);
+  localStorage.setItem('droplet_hist',JSON.stringify(trimmed));
+}
+
+function load(){
+  let s={};
+  try{s=JSON.parse(localStorage.getItem('droplet_pwa')||'{}');}catch(e){}
+  const today=new Date().toDateString();
+  alarms=s.alarms||[];goal=s.goal||2000;streak=s.streak||0;
+  if(s.date===today){
+    totalToday=s.totalToday||0;logs=s.logs||[];
+    shownMilestones=new Set(s.milestones||[]);goalCelebrated=s.goalCelebrated||false;
+  } else if(s.date){
+    const prev=new Date(s.date),now=new Date(),diff=Math.round((now-prev)/86400000);
+    if(diff===1&&s.totalToday>=s.goal) streak++;
+    else if(diff>1) streak=0;
+    archiveDay(s.date,s.totalToday||0,s.goal||2000);
+  }
+  document.getElementById('goalSet').value=goal;
+  document.getElementById('streakNum').textContent=streak;
+  renderAlarmListFull();renderLog();updateBottle();scheduleNext();
+}
+
+// ── Tabs ───────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const tabs=['today','alarms','stats'];
+    t.classList.toggle('active',tabs[i]===name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='stats')renderStats();
+}
+
+// ── Bottle ─────────────────────────────────────────────────
+function updateBottle(){
+  goal=parseInt(document.getElementById('goalSet').value)||2000;
+  const pct=Math.min(1,totalToday/goal);
+  const fh=Math.round(pct*BRANGE),fy=BBOT-fh;
+  document.getElementById('wfill').setAttribute('y',fy);
+  document.getElementById('wfill').setAttribute('height',fh);
+  document.getElementById('bottleGlow').style.opacity=pct>0?(pct*.55).toFixed(2):'0';
+  const pi=Math.round(pct*100);
+  document.getElementById('consumedAmt').textContent=totalToday;
+  document.getElementById('goalText').textContent=totalToday+' / '+goal+' ml';
+  const bar=document.getElementById('barFill'),pill=document.getElementById('goalPill');
+  bar.style.width=pi+'%';
+  if(pct>=1){
+    bar.className='bar-fill green';pill.className='goal-pill done';pill.textContent='goal crushed! 🎉';
+    document.getElementById('wfill').setAttribute('fill','#39ff96');
+  } else if(pct>=.5){
+    bar.className='bar-fill pink';pill.className='goal-pill half';pill.textContent=pi+'% — keep going!';
+    document.getElementById('wfill').setAttribute('fill','#00e5ff');
+  } else {
+    bar.className='bar-fill';pill.className='goal-pill';pill.textContent=pi+'% of goal';
+    document.getElementById('wfill').setAttribute('fill','#00e5ff');
+  }
+}
+
+// ── Alarms ─────────────────────────────────────────────────
+function addAlarm(){
+  const time=document.getElementById('alarmTime').value;
+  const amt=parseInt(document.getElementById('alarmAmt').value)||250;
+  goal=parseInt(document.getElementById('goalSet').value)||2000;
+  if(!time)return;
+  alarms.push({time,amt,id:Date.now()});
+  alarms.sort((a,b)=>a.time.localeCompare(b.time));
+  renderAlarmListFull();updateBottle();scheduleNext();save();
+  showToast('⏰','alarm set for '+time+'!');
+}
+
+function deleteAlarm(id){
+  alarms=alarms.filter(a=>a.id!==id);
+  renderAlarmListFull();scheduleNext();save();
+}
+
+function renderAlarmListFull(){
+  const el=document.getElementById('alarmListFull');
+  if(!alarms.length){el.innerHTML='<div class="empty-log">no alarms yet — add one above</div>';return;}
+  el.innerHTML=alarms.map(a=>`
+    <div class="saved-alarm-item" style="margin-bottom:6px;">
+      <span class="sa-time">${a.time}</span>
+      <span class="sa-amt">${a.amt} ml target</span>
+      <span class="sa-del" onclick="deleteAlarm(${a.id})">×</span>
+    </div>`).join('');
+}
+
+function scheduleNext(){
+  clearInterval(timerInterval);
+  if(paused||alarmActive||!alarms.length){
+    document.getElementById('reminderTime').textContent='--:--:--';
+    document.getElementById('reminderNext').textContent=alarms.length?'paused':'set an alarm';
+    return;
+  }
+  const now=new Date();let best=null,bestDiff=Infinity;
+  for(const a of alarms){
+    const[h,m]=a.time.split(':').map(Number);
+    const t=new Date();t.setHours(h,m,0,0);
+    if(t<=now)t.setDate(t.getDate()+1);
+    const diff=t-now;if(diff<bestDiff){bestDiff=diff;best={a,diff};}
+  }
+  if(!best)return;
+  countdown=Math.floor(best.diff/1000);
+  document.getElementById('reminderNext').textContent='next: '+best.a.time+' · '+best.a.amt+'ml';
+  tickTimer();
+  timerInterval=setInterval(()=>{
+    if(paused)return;countdown--;tickTimer();
+    if(countdown<=0){clearInterval(timerInterval);triggerAlarm(best.a);}
+  },1000);
+}
+
+function tickTimer(){
+  const h=Math.floor(countdown/3600),m=Math.floor((countdown%3600)/60),s=countdown%60;
+  document.getElementById('reminderTime').textContent=
+    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function triggerAlarm(alarm){
+  alarmActive=true;
+  document.getElementById('drinkModal').classList.add('active');
+  document.getElementById('drinkSub').textContent='suggested: '+alarm.amt+' ml — log to dismiss 🫗';
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,.5,1].forEach(d=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=1047;
+      g.gain.setValueAtTime(.25,ctx.currentTime+d);
+      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+d+.3);
+      o.start(ctx.currentTime+d);o.stop(ctx.currentTime+d+.35);
+    });
+  }catch(e){}
+}
+
+// ── Logging ────────────────────────────────────────────────
+function getReaction(ml){
+  for(const r of REACTIONS){if(ml<=r.max)return{emoji:r.emojis[Math.floor(Math.random()*r.emojis.length)],msg:r.msg};}
+  return{emoji:'💧',msg:'hydrated!'};
+}
+
+function logWater(ml,ev){
+  if(alarmActive){document.getElementById('drinkModal').classList.remove('active');alarmActive=false;}
+  const now=new Date(),reaction=getReaction(ml);
+  logs.unshift({time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),ml,emoji:reaction.emoji});
+  totalToday+=ml;
+  updateBottle();checkMilestones();checkGoal();renderLog();scheduleNext();save();
+  if(ev){
+    burstEmoji(reaction.emoji,ev.clientX||window.innerWidth/2,ev.clientY||300);
+    showToast(reaction.emoji,reaction.msg);
+  }
+}
+
+function logCustom(ev){
+  const v=parseInt(document.getElementById('customInput').value);
+  if(v>0){logWater(v,ev);document.getElementById('customInput').value='';}
+}
+function logDrinkCustom(ev){
+  const v=parseInt(document.getElementById('drinkCustom').value);
+  if(v>0){logWater(v,ev);document.getElementById('drinkCustom').value='';}
+}
+
+function checkMilestones(){
+  const pct=totalToday/goal;
+  for(const m of MILESTONES){
+    const k=m.pct.toString();
+    if(pct>=m.pct&&!shownMilestones.has(k)){
+      shownMilestones.add(k);
+      setTimeout(()=>showToast(m.emoji,m.msg),600);
+    }
+  }
+}
+
+function checkGoal(){
+  if(totalToday>=goal&&!goalCelebrated){
+    goalCelebrated=true;
+    setTimeout(()=>showCelebration(streak>=6),700);
+  }
+}
+
+function renderLog(){
+  const el=document.getElementById('logList');
+  if(!logs.length){el.innerHTML='<div class="empty-log">no entries yet. start drinking!</div>';return;}
+  el.innerHTML=logs.slice(0,20).map(l=>`
+    <div class="log-entry">
+      <div class="log-entry-left"><div class="log-dot"></div><span class="log-time-text">${l.time}</span></div>
+      <div class="log-entry-right"><span class="log-reaction">${l.emoji||'💧'}</span><span class="log-amount-text">+${l.ml} ml</span></div>
+    </div>`).join('');
+}
+
+function clearLog(){
+  logs=[];totalToday=0;shownMilestones=new Set();goalCelebrated=false;
+  updateBottle();renderLog();save();
+}
+
+function togglePause(){
+  paused=!paused;
+  const btn=document.getElementById('pauseBtn');
+  btn.textContent=paused?'▶ resume':'⏸ pause';
+  btn.className=paused?'ctrl-btn pause-active':'ctrl-btn';
+  if(!paused)scheduleNext();
+  else{clearInterval(timerInterval);document.getElementById('reminderTime').textContent='--:--:--';document.getElementById('reminderNext').textContent='paused';}
+}
+
+function resetDay(){
+  clearInterval(timerInterval);alarmActive=paused=goalCelebrated=false;
+  totalToday=0;logs=[];shownMilestones=new Set();
+  document.getElementById('drinkModal').classList.remove('active');
+  document.getElementById('celeOverlay').classList.remove('active');
+  document.getElementById('pauseBtn').textContent='⏸ pause';
+  document.getElementById('pauseBtn').className='ctrl-btn';
+  updateBottle();renderLog();scheduleNext();save();
+}
+
+// ── Stats ──────────────────────────────────────────────────
+function renderStats(){
+  let hist={};
+  try{hist=JSON.parse(localStorage.getItem('droplet_hist')||'{}');}catch(e){}
+  const days=Object.values(hist);
+  const totalDays=days.length;
+  const goalDays=days.filter(d=>d.hit).length;
+  const avgMl=totalDays?Math.round(days.reduce((s,d)=>s+d.ml,0)/totalDays):0;
+  const totalLitres=(days.reduce((s,d)=>s+d.ml,0)/1000).toFixed(1);
+
+  document.getElementById('statsGrid').innerHTML=[
+    ['🔥','streak',streak,'days'],
+    ['🎯','goals hit',goalDays+'/'+totalDays,'days'],
+    ['📊','avg daily',avgMl,'ml'],
+    ['💧','total logged',totalLitres,'litres'],
+  ].map(([icon,label,val,unit])=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;">
+      <div style="font-size:20px;margin-bottom:6px;">${icon}</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;">${label}</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--cyan);">${val}</div>
+      <div style="font-size:11px;color:var(--muted);">${unit}</div>
+    </div>`).join('');
+
+  const keys=Object.keys(hist).sort((a,b)=>new Date(a)-new Date(b)).slice(-14);
+  document.getElementById('streakGrid').innerHTML=keys.map(k=>{
+    const d=hist[k];const date=new Date(k);
+    const label=date.toLocaleDateString('en',{weekday:'short'});
+    const color=d.hit?'var(--green)':'rgba(255,255,255,0.1)';
+    return`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+      <div style="width:28px;height:28px;border-radius:6px;background:${color};"></div>
+      <div style="font-size:9px;color:var(--muted);">${label}</div>
+    </div>`;
+  }).join('')||'<div style="font-size:12px;color:var(--muted);font-style:italic;">no history yet</div>';
+}
+
+// ── Celebration ────────────────────────────────────────────
+function showCelebration(isLegend){
+  const gifs=isLegend?LEGEND_GIFS:NORMAL_GIFS;
+  const gif=document.getElementById('celeGif');
+  gif.src=gifs[Math.floor(Math.random()*gifs.length)];
+  gif.className=isLegend?'cele-gif legend':'cele-gif';
+  document.getElementById('celeTitle').className=isLegend?'cele-title legend':'cele-title';
+  document.getElementById('celeTitle').textContent=isLegend?'7-day legend! 🏆':'goal crushed! 💧';
+  document.getElementById('celeSub').textContent=isLegend?
+    "a whole week of hydration — you're built different fr":
+    "daily goal smashed — stay hydrated, king/queen";
+  document.getElementById('celeClose').className=isLegend?'cele-close legend':'cele-close';
+  const filled=Math.min(streak,7);
+  document.getElementById('streakDots').innerHTML=
+    Array.from({length:7},(_,i)=>`<div class="streak-dot${i<filled?' filled':''}"></div>`).join('');
+  document.getElementById('celeOverlay').classList.add('active');
+}
+function closeCele(){document.getElementById('celeOverlay').classList.remove('active');}
+
+// ── UI Helpers ─────────────────────────────────────────────
+function burstEmoji(emoji,x,y){
+  const el=document.createElement('div');el.className='emoji-burst';el.textContent=emoji;
+  el.style.left=x+'px';el.style.top=y+'px';document.body.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+let toastTimer=null;
+function showToast(emoji,msg){
+  document.getElementById('toastEmoji').textContent=emoji;
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>document.getElementById('toast').classList.remove('show'),2400);
+}
+
+// ── PWA Install ────────────────────────────────────────────
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('installBanner').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  const{outcome}=await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById('installBanner').classList.remove('show');
+});
+function dismissInstall(){document.getElementById('installBanner').classList.remove('show');}
+window.addEventListener('appinstalled',()=>{document.getElementById('installBanner').classList.remove('show');});
+
+// ── Boot ───────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+load();
+</script>
+</body>
+</html>
